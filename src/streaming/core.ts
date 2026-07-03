@@ -651,11 +651,14 @@ export function jsonrepairCore({
    *   stop index detected in the first iteration.
    */
   function parseString(stopAtDelimiter = false, stopAtIndex = -1): boolean {
-    let skipEscapeChars = input.charAt(i) === '\\'
+    const skipEscapeChars = input.charAt(i) === '\\'
     if (skipEscapeChars) {
       // repair: remove the first escape character
       i++
-      skipEscapeChars = true
+
+      if (!isQuote(input.charAt(i))) {
+        throwUnexpectedCharacter()
+      }
     }
 
     // a string can be opened by a quote character, or by an HTML entity that
@@ -743,6 +746,10 @@ export function jsonrepairCore({
             parseConcatenatedString()
 
             return stack.update(Caret.afterValue)
+          }
+
+          if (input.charAt(i) === '\\') {
+            throwUnexpectedCharacter()
           }
 
           const iPrevChar = prevNonWhitespaceIndex(iQuote - 1)
